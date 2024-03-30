@@ -25,7 +25,7 @@ def post_word():
         ).one()
 
         state_grid = [space for space in board.state]
-        state_index = int(x) + int(y) * 15
+        start_index = int(x) + int(y) * 15
 
         if direction == 'a':
             for i in range(len(word)):

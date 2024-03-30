@@ -8,11 +8,11 @@ let TILE_BUFFER = 8;
 
 let GRID = [];
 
-const url='http://localhost:5000/board?x=0&y=0';
+const url_base='http://localhost:5000/';
 
 async function fetchBoard() {
     GRID = [];
-    const response = await fetch(url);
+    const response = await fetch(url_base + 'board?x=0&y=0');
     const board = await response.text();
     for (let i = 0; i < GRID_DIMENSION; i++) {
 	GRID.push([]);
@@ -21,12 +21,41 @@ async function fetchBoard() {
 	    GRID[i].push(gridChar);
 	}
     }
-}	
+}
+
+async function submitWord() {
+    const response = await fetch(
+	url_base + 'word',
+	{
+	    method: 'POST',
+	    headers: {
+		"Content-Type": "application/json",
+	    },
+	    body: JSON.stringify({
+		x: START_Y, // fix this
+		y: START_X,
+		direction: 'a',
+		word: WORD,
+	    }),
+	},
+    );
+    const board = await response.text();
+    for (let i = 0; i < GRID_DIMENSION; i++) {
+	GRID.push([]);
+	for (let j = 0; j < GRID_DIMENSION; j++) {
+	    let gridChar = board.charAt(i * GRID_DIMENSION + j);
+	    GRID[i].push(gridChar);
+	}
+    }
+}
 
 let TILES = ['A', 'B', 'C', 'D', 'E', 'F'];
 
 let SELECTED = null;
 let PLACED = [];
+let START_X = null;
+let START_Y = null;
+let WORD = '';
 
 function drawCanvas() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -42,7 +71,16 @@ function drawCanvas() {
 		    GRID[j][i],
 		    i * CELL_SIZE + CELL_SIZE / 3,
 		    (j + 1) * CELL_SIZE - CELL_SIZE / 3,
-		);
+		);		
+	    } else if (PLACED.length == 1) {
+		if (!((j == START_X - 1 && i == START_Y) ||
+		    (j == START_X + 1 && i == START_Y) ||
+		    (i == START_Y - 1 && j == START_X) ||
+		      (i == START_Y + 1 && j == START_X))) {
+		    ctx.fillStyle = "#BBBBBB";
+		    ctx.fill();
+		    ctx.fillStyle = "Black";
+		}
 	    }
 	    ctx.stroke();
 	}
@@ -131,6 +169,11 @@ async function handleMouseDown(e) {
 	if (SELECTED !== null && GRID[j][i] == '_') {
 	    GRID[j][i] = TILES[SELECTED];
 	    PLACED.push(SELECTED);
+	    WORD += TILES[SELECTED];
+	    if (PLACED.length == 1) {
+		START_X = j;
+		START_Y = i;
+	    }
 	    SELECTED = null;
 	}
     }
@@ -139,13 +182,23 @@ async function handleMouseDown(e) {
     if (mouseY >= (GRID_DIMENSION + 3) * CELL_SIZE && mouseY <= (GRID_DIMENSION + 4) * CELL_SIZE) {
 	// submit
 	if (mouseX <= (CELL_SIZE + TILE_BUFFER) * 2) {
-	    console.log("SUBMIT");
+	    await submitWord();
+	    await fetchBoard();
+	    PLACED = [];
+	    SELECTED = null;
+	    START_X = null;
+	    START_Y = null;
+	    WORD = '';
 	}
+
 	// cancel
 	if (mouseX >= (CELL_SIZE + TILE_BUFFER) * 2 + TILE_BUFFER && mouseX <= (CELL_SIZE + TILE_BUFFER) * 4 + TILE_BUFFER * 3) {
 	    await fetchBoard();
 	    PLACED = [];
 	    SELECTED = null;
+	    START_X = null;
+	    START_Y = null;
+	    WORD = '';
 	}
     }
 
