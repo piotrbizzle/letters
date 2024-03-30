@@ -5,9 +5,9 @@ import models
 engine = create_engine(
     URL.create(
         "postgresql",
-        username="postgres",
+        username="pbestoso",
         password="password",
         host="localhost",
-        datebase="letters",
+        database="postgres",
     )
 )

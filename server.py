@@ -1,5 +1,5 @@
 import copy
-from flask import Flask, request
+from flask import Flask, render_template, request
 
 import engine
 import models
@@ -7,7 +7,7 @@ import models
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-app = Flask(_name__)
+app = Flask(__name__)
 
 
 @app.route("/word", methods=["POST"])
@@ -20,7 +20,7 @@ def post_word():
     with Session(engine.engine) as session:
         board = session.scalars(
             select(models.Board).where(
-                models.board.x == 0, models.Board.y == 0
+                models.Board.x == 0, models.Board.y == 0
             ),
         ).one()
 
@@ -39,3 +39,22 @@ def post_word():
         session.commit()
 
     return ret
+
+@app.route("/board", methods=["GET"])
+def get_board():
+    x = request.args.get('x')
+    y = request.args.get('y')
+
+    with Session(engine.engine) as session:
+        board = session.scalars(
+            select(models.Board).where(
+                models.Board.x == 0, models.Board.y == 0
+            ),
+        ).one()
+        ret = str(board.state)
+
+    return ret
+
+@app.route("/index", methods=["GET"])
+def index():
+    return render_template('index.html')

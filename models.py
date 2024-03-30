@@ -14,5 +14,6 @@ class Board(Base):
     id = Column(Integer, primary_key=True)
     x = Column(Integer)
     y = Column(Integer)
-    state = Column(String(255))
+    state = Column(String(225))
+    created_at = Column(DateTime, onupdate=datetime.datetime.now)
     updated_at = Column(DateTime, onupdate=datetime.datetime.now)
