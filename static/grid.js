@@ -34,7 +34,7 @@ async function submitWord() {
 	    body: JSON.stringify({
 		x: START_Y, // fix this
 		y: START_X,
-		direction: 'a',
+		direction: DIRECTION,
 		word: WORD,
 	    }),
 	},
@@ -55,6 +55,7 @@ let SELECTED = null;
 let PLACED = [];
 let START_X = null;
 let START_Y = null;
+let DIRECTION = 'a';
 let WORD = '';
 
 function drawCanvas() {
@@ -73,11 +74,21 @@ function drawCanvas() {
 		    (j + 1) * CELL_SIZE - CELL_SIZE / 3,
 		);		
 	    } else if (PLACED.length == 1) {
-		if (!((j == START_X - 1 && i == START_Y) ||
-		    (j == START_X + 1 && i == START_Y) ||
-		    (i == START_Y - 1 && j == START_X) ||
-		      (i == START_Y + 1 && j == START_X))) {
-		    ctx.fillStyle = "#BBBBBB";
+		if ((j == START_X + 1 && i == START_Y) ||
+		    (i == START_Y + 1 && j == START_X)) {
+		    ctx.fillStyle = "#DDDDDD";
+		    ctx.fill();
+		    ctx.fillStyle = "Black";
+		}
+	    } else if (PLACED.length > 1) {
+		if ((DIRECTION == 'd' &&
+		     j == START_X + PLACED.length &&
+		     i == START_Y) ||
+		    (DIRECTION == 'a' &&
+		     j == START_X &&
+		     i == START_Y + PLACED.length)
+		   ) {
+		    ctx.fillStyle = "#DDDDDD";
 		    ctx.fill();
 		    ctx.fillStyle = "Black";
 		}
@@ -145,6 +156,51 @@ function drawCanvas() {
     ctx.stroke();    		 
 }
 
+function placeTile(mouseX, mouseY) {
+    let i = Math.floor(mouseX / CELL_SIZE);
+    let j = Math.floor(mouseY / CELL_SIZE);
+
+    // validate move
+    if (SELECTED === null) {
+	return;
+    }
+    if (GRID[j][i] != '_') {
+	return;
+    }
+
+    // TODO: clean this all up
+    if (PLACED.length == 1) {
+	if (j == START_X + 1 && i == START_Y) {
+	    DIRECTION = 'd';
+	} else if (i == START_Y + 1 && j == START_X) {
+	    DIRECTION = 'a';
+	} else {
+	    return;
+	}
+    }
+    if (PLACED.length > 1) {
+	if (!((DIRECTION == 'd' &&
+	       j == START_X + PLACED.length &&
+	       i == START_Y) ||
+	      (DIRECTION == 'a' &&
+	       j == START_X &&
+	       i == START_Y + PLACED.length)
+	     )) {
+	    return;
+	}
+    }
+
+    GRID[j][i] = TILES[SELECTED];
+    PLACED.push(SELECTED);
+    WORD += TILES[SELECTED];
+    if (PLACED.length == 1) {
+	START_X = j;
+	START_Y = i;
+    }
+    SELECTED = null;
+
+}
+
 async function handleMouseDown(e) {
     // get current mouse position
     var rect = canvas.getBoundingClientRect();
@@ -164,18 +220,7 @@ async function handleMouseDown(e) {
 
     // click on grid
     if (mouseY <= GRID_DIMENSION * CELL_SIZE) {
-	let i = Math.floor(mouseX / CELL_SIZE);
-	let j = Math.floor(mouseY / CELL_SIZE);
-	if (SELECTED !== null && GRID[j][i] == '_') {
-	    GRID[j][i] = TILES[SELECTED];
-	    PLACED.push(SELECTED);
-	    WORD += TILES[SELECTED];
-	    if (PLACED.length == 1) {
-		START_X = j;
-		START_Y = i;
-	    }
-	    SELECTED = null;
-	}
+	placeTile(mouseX, mouseY);
     }
 
     // click submit or cancel
