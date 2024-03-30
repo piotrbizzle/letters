@@ -1,5 +1,5 @@
 import copy
-from flask import Flask, render_template, request
+from flask import Flask, jsonify, render_template, request
 
 import engine
 import models
@@ -35,10 +35,14 @@ def post_word():
                 state_grid[start_index + 15 * i] = word[i]
 
         board.state = ''.join(state_grid)
-        ret = str(board.state)
+        ret_board = str(board.state)
+        ret_updated = board.updated_at;
         session.commit()
 
-    return ret
+    return jsonify({
+        'board': ret_board,
+        'updated_at': ret_updated,
+    })
 
 @app.route("/board", methods=["GET"])
 def get_board():
@@ -51,9 +55,13 @@ def get_board():
                 models.Board.x == 0, models.Board.y == 0
             ),
         ).one()
-        ret = str(board.state)
+        ret_updated = str(board.updated_at)
+        ret_board = str(board.state)
 
-    return ret
+    return jsonify({
+        'board': ret_board,
+        'updated_at': ret_updated,
+    })
 
 @app.route("/index", methods=["GET"])
 def index():

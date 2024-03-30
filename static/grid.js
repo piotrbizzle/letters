@@ -13,7 +13,8 @@ const url_base='http://localhost:5000/';
 async function fetchBoard() {
     GRID = [];
     const response = await fetch(url_base + 'board?x=0&y=0');
-    const board = await response.text();
+    const responseJson = await response.json();
+    const board = responseJson.board;
     for (let i = 0; i < GRID_DIMENSION; i++) {
 	GRID.push([]);
 	for (let j = 0; j < GRID_DIMENSION; j++) {
@@ -39,7 +40,8 @@ async function submitWord() {
 	    }),
 	},
     );
-    const board = await response.text();
+    const responseJson = await response.json();
+    const board = responseJson.board;
     for (let i = 0; i < GRID_DIMENSION; i++) {
 	GRID.push([]);
 	for (let j = 0; j < GRID_DIMENSION; j++) {
@@ -250,8 +252,17 @@ async function handleMouseDown(e) {
     drawCanvas();
 }
 
+async function refresh() {
+    if (PLACED.length != 0) {
+	return;
+    }
+    await fetchBoard();
+    drawCanvas();
+    setTimeout(refresh, 10000);
+}
+
 // event listeners
 canvas.addEventListener("mousedown", (e) => handleMouseDown(e));
 
-await fetchBoard();
+await refresh();
 drawCanvas();			 
