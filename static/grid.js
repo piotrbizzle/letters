@@ -15,12 +15,17 @@ async function fetchBoard() {
     const response = await fetch(url_base + 'board?x=0&y=0');
     const responseJson = await response.json();
     const board = responseJson.board;
-    for (let i = 0; i < GRID_DIMENSION; i++) {
-	GRID.push([]);
-	for (let j = 0; j < GRID_DIMENSION; j++) {
-	    let gridChar = board.charAt(i * GRID_DIMENSION + j);
-	    GRID[i].push(gridChar);
+    const updatedDate = new Date(responseJson.updated_at);
+    if (LAST_UPDATE == null || LAST_UPDATE < updatedDate) {
+	LAST_UPDATE = updatedDate;
+	for (let i = 0; i < GRID_DIMENSION; i++) {
+	    GRID.push([]);
+	    for (let j = 0; j < GRID_DIMENSION; j++) {
+		let gridChar = board.charAt(i * GRID_DIMENSION + j);
+		GRID[i].push(gridChar);
+	    }
 	}
+	drawCanvas();
     }
 }
 
@@ -59,6 +64,7 @@ let START_X = null;
 let START_Y = null;
 let DIRECTION = 'a';
 let WORD = '';
+let LAST_UPDATE = null;
 
 function drawCanvas() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -257,7 +263,6 @@ async function refresh() {
 	return;
     }
     await fetchBoard();
-    drawCanvas();
     setTimeout(refresh, 10000);
 }
 
@@ -265,4 +270,4 @@ async function refresh() {
 canvas.addEventListener("mousedown", (e) => handleMouseDown(e));
 
 await refresh();
-drawCanvas();			 
+
