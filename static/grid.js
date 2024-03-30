@@ -10,13 +10,14 @@ let GRID = [];
 
 const url_base='http://localhost:5000/';
 
+// TOCO: render board and placed tiles separately
 async function fetchBoard() {
-    GRID = [];
     const response = await fetch(url_base + 'board?x=0&y=0');
     const responseJson = await response.json();
     const board = responseJson.board;
     const updatedDate = new Date(responseJson.updated_at);
     if (LAST_UPDATE == null || LAST_UPDATE < updatedDate) {
+	GRID = [];
 	LAST_UPDATE = updatedDate;
 	for (let i = 0; i < GRID_DIMENSION; i++) {
 	    GRID.push([]);
@@ -30,6 +31,9 @@ async function fetchBoard() {
 }
 
 async function submitWord() {
+    if (WORD.length == 0) {
+	return;
+    }
     const response = await fetch(
 	url_base + 'word',
 	{
@@ -246,12 +250,12 @@ async function handleMouseDown(e) {
 
 	// cancel
 	if (mouseX >= (CELL_SIZE + TILE_BUFFER) * 2 + TILE_BUFFER && mouseX <= (CELL_SIZE + TILE_BUFFER) * 4 + TILE_BUFFER * 3) {
-	    await fetchBoard();
 	    PLACED = [];
 	    SELECTED = null;
 	    START_X = null;
 	    START_Y = null;
 	    WORD = '';
+	    await fetchBoard();
 	}
     }
 
